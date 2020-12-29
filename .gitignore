@@ -15,7 +15,7 @@ my_settings.py
 .DS_Store
 *.csv
 db_uploader.py
-
+tangway/__pycache__/
 
 # If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
 # in your Git repository. Update and uncomment the following line accordingly.
