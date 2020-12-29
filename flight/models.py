@@ -16,7 +16,7 @@ class Airplane(models.Model):
     name = models.CharField(max_length=8)
 
     class Meta:
-        db_table = 'ariplanes'
+        db_table = 'airplanes'
 
 class PathType(models.Model):
     name = models.CharField(max_length=8)
