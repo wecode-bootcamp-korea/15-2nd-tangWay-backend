@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 
-from pathlib import Path
+from pathlib     import Path
 from my_settings import DATABASES, SECRET_KEY, JWT_ALGORITHM, LOGGING
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,7 +30,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 LOGGING = LOGGING
-
 # Application definition
 
 INSTALLED_APPS = [

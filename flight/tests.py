@@ -1,5 +1,10 @@
-import unittest, json
+import unittest, json, bcrypt, jwt
+
+from datetime      import datetime, timedelta
 from django.test   import TestCase, Client
+
+from my_settings   import SECRET_KEY, JWT_ALGORITHM
+from user.models   import Gender, Country, User
 from flight.models import Service, Country, Airport, Airplane, PathType, FlightImage, CalenderPrice, Price, Calender, Flight
 
 class ServiceBundleTest(TestCase):
@@ -121,3 +126,108 @@ class FlightImageTest(TestCase):
                     ]
                     }
                 )
+
+class PassengerInformationTest(TestCase):
+    def setUp(self):
+        self.client     = Client()
+        self.maxDiff    = None
+        self.gender     = Gender.objects.create(name='male')
+        self.country    = Country.objects.create(name='대한민국')
+
+        hashed_password = bcrypt.hashpw('123456aA!'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        User.objects.create(
+                 id            = 1,
+                 korean_name   = '문타리',
+                 english_name  = 'munshee',
+                 email         = 'munshee@naver.com',
+                 password      = hashed_password,
+                 date_of_birth = '19920424',
+                 phone_number  = '01010101234',
+                 gender_id     = self.gender.id,
+                 country_id    = self.country.id
+                 )
+
+    def tearDown(self):
+        Gender.objects.all().delete()
+        Country.objects.all().delete()
+        User.objects.all().delete()
+
+    def test_flight_get_passenger_information_success(self):
+        signin_user     = {
+                'email'    : 'munshee@naver.com',
+                'password' : '123456aA!'
+                }
+        signin_response = self.client.post('/user/signin', json.dumps(signin_user), content_type='application/json')
+
+        header          = {'HTTP_Authorization' : signin_response.json()['access_token']}
+        response        = self.client.get('/flight/passenger', content_type='application/json', **header)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+                {
+                    'USER_INFORMATION'  : {
+                        'country'       : '대한민국',
+                        'date_of_birth' : '19920424',
+                        'email'         : 'munshee@naver.com',
+                        'gender'        : 'male',
+                        'name'          : '문타리',
+                        'phone_number'  : '01010101234'
+                        }
+                })
+
+    def test_flight_get_passenger_information_not_exist_access_token_error(self):
+        header   = {'HTTP_Authorization' : None}
+        response = self.client.get('/flight/passenger', content_type='application/json', **header)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json(),
+                {
+                    'MESSAGE' : 'INCORRECT_USER_INFORMATION'
+                })
+
+    def test_flight_get_passenger_information_jwt_decode_error(self):
+        signin_user     = {
+                'email'    : 'munshee@naver.com',
+                'password' : '123456aA!'
+                }
+        signin_response = self.client.post('/user/signin', json.dumps(signin_user), content_type='application/json')
+
+        header          = {'HTTP_Authorization' : signin_response.json()['access_token'] + 'raise_jwt_decode_error'}
+        response        = self.client.get('/flight/passenger', content_type='application/json', **header)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(),
+                {
+                    'MESSAGE' : 'INCORRECT_USER_INFORMATION'
+                })
+
+    def test_flight_get_passenger_information_user_does_not_exist_error(self):
+        signin_user     = {
+                'email'    : 'munshee@naver.com',
+                'password' : '123456aA!'
+                }
+        signin_response = self.client.post('/user/signin', json.dumps(signin_user), content_type='application/json')
+
+        header          = {'HTTP_Authorization' : signin_response.json()['access_token']}
+        self.tearDown()
+        response        = self.client.get('/flight/passenger', content_type='application/json', **header)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(),
+                {
+                    'MESSAGE' : 'INCORRECT_USER_INFORMATION'
+                })
+
+    def test_flight_get_passenger_jwt_expried_error(self):
+        payload  = {'user-id' : 1, 'exp' : datetime.now() -timedelta(hours=10)}
+        token    = jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)
+
+        header   = {'HTTP_Authorization' : token}
+        response = self.client.get('/flight/passenger', content_type='application/json', **header)
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(),
+                {
+                    'MESSAGE' : 'EXPIRED_TOKEN'
+                })
