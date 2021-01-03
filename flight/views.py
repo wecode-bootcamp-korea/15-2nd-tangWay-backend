@@ -1,8 +1,10 @@
-import json
+import json, requests
 
 from django.views  import View
 from django.http   import JsonResponse
 
+from user.models   import User
+from user.utils    import SigninConfirm 
 from flight.models import Service, Flight
 
 class ServiceBundleView(View):
@@ -29,3 +31,18 @@ class FlightImageView(View):
                     'image'  : flight.image.image_url
                 } for flight in flights]
         return JsonResponse({'FLIGHT' : flight}, status=200)
+
+class PassengerInformationView(View):
+    @SigninConfirm
+    def get(self, request):
+        user    = User.objects.select_related('gender', 'country').get(id=request.user.id)
+        user_infomation = {
+                'country'       : user.country.name,
+                'date_of_birth' : user.date_of_birth,
+                'email'         : user.email,
+                'gender'        : user.gender.name,
+                'name'          : user.korean_name,
+                'phone_number'  : user.phone_number
+                }
+        
+        return JsonResponse({'USER_INFORMATION' : user_infomation}, status=200)
