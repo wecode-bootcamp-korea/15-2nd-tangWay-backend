@@ -3,9 +3,9 @@ import json, requests
 from django.views  import View
 from django.http   import JsonResponse
 
-from user.models   import User
+from user.models   import User, Country
 from user.utils    import SigninConfirm 
-from flight.models import Service, Flight
+from flight.models import Service, Flight, Airport
 
 class ServiceBundleView(View):
     def get(self, request):
@@ -46,3 +46,32 @@ class PassengerInformationView(View):
                 }
         
         return JsonResponse({'USER_INFORMATION' : user_infomation}, status=200)
+
+class MainFlightView(View):
+    def get(self, request, country_id):
+        main_flights = Airport.objects.filter(country_id=country_id)
+        
+        if main_flights:
+            country_airports = [
+                    {
+                        'id'           :  flight.id,
+                        'korean_name'  : flight.korean_name,
+                        'english_name' : flight.english_name
+                    } for flight in main_flights]
+            return JsonResponse({'country_airport' : country_airports}, status=200)
+        return JsonResponse({'MESSAGE' : 'NOT_EXIST_COUNTRY'}, status=401)
+
+class MainCountryView(View):
+    def get(self, request):
+        countrys = Country.objects.prefetch_related('airport_set').all()
+        country  = [{
+                    'id'       : country.id,
+                    'name'     : country.name,
+                    'airports' : [
+                        {
+                        'korean_name'  : airport.korean_name,
+                        'english_name' : airport.english_name
+                        } for airport in country.airport_set.all()]
+                    } for country in countrys]
+
+        return JsonResponse({'countrys' : country}, status=200)

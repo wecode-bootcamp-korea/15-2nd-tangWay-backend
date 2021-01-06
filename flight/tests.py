@@ -5,7 +5,7 @@ from django.test   import TestCase, Client
 
 from my_settings   import SECRET_KEY, JWT_ALGORITHM
 from user.models   import Gender, Country, User
-from flight.models import Service, Country, Airport, Airplane, PathType, FlightImage, CalenderPrice, Price, Calender, Flight
+from flight.models import Service, Airport, Airplane, PathType, FlightImage, CalenderPrice, Price, Calender, Flight
 
 class ServiceBundleTest(TestCase):
     def setUp(self):
@@ -34,6 +34,7 @@ class ServiceBundleTest(TestCase):
 
 class FlightImageTest(TestCase):
     def setUp(self):
+        self.client  = Client()
         self.maxDiff = None
         Country.objects.create(
                 name = '대한민국'
@@ -110,14 +111,13 @@ class FlightImageTest(TestCase):
         Flight.objects.all.delete()
 
     def test_get_flight_flight_image_view_spread_success(self):
-        client   = Client()
-        response = client.get('/flight/flight_image', content_type = 'application/json')
+        response = self.client.get('/flight/flight_image', content_type = 'application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
                 {'FLIGHT' : [
                     {
                         'arrive': '서울/김포',
-                        'date'  : '2021-01-10T20:00:00Z',
+                        'date'  : '2021-01-10T20:00:00',
                         'depart': '제주',
                         'id'    : 1,
                         'image' : 'https://images.unsplash.com/photo-1607727536244-b3ab855fb209?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
@@ -230,4 +230,81 @@ class PassengerInformationTest(TestCase):
         self.assertEqual(response.json(),
                 {
                     'MESSAGE' : 'EXPIRED_TOKEN'
+                })
+
+class MainFlightViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.maxDiff = None
+
+        Country.objects.create(
+                id = 1,
+                name='대한민국'
+                )
+
+        Airport.objects.create(
+                country_id   = 1,
+                korean_name  = '서울/김포',
+                english_name = 'GIM'
+                )
+
+        Airport.objects.create(
+                country_id   = 1,
+                korean_name  = '제주',
+                english_name = 'JEJ'
+                )
+
+    def tearDown(self):
+        Country.objects.all().delete()
+        Airport.objects.all().delete()
+
+    def test_get_flight_main_flight_view_spread_success(self):
+        response = self.client.get('/flight/1', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+                {
+                    'country_airport' : response.json()['country_airport']
+                })
+
+    def test_get_flight_main_fligt_view_not_exist_country_error(self):
+        response = self.client.get('/flight/100', content_type='application/json')
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), 
+                {
+                    'MESSAGE' : 'NOT_EXIST_COUNTRY'
+                })
+
+class MainCountryViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.maxDiff = None
+
+        Country.objects.create(
+                id = 1,
+                name='대한민국'
+                )
+
+        Airport.objects.create(
+                country_id   = 1,
+                korean_name  = '서울/김포',
+                english_name = 'GIM'
+                )
+
+        Airport.objects.create(
+                country_id   = 1,
+                korean_name  = '제주',
+                english_name = 'JEJ'
+                )
+
+    def tearDown(self):
+        Country.objects.all().delete()
+        Airport.objects.all().delete()
+
+    def test_get_flight_main_country_view_spread_success(self):
+        response = self.client.get('/flight/country', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(),
+                {
+                    'countrys' : response.json()['countrys']
+
                 })
