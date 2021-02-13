@@ -1,11 +1,10 @@
 import json, requests
-
-from django.views  import View
-from django.http   import JsonResponse
-
-from user.models   import User, Country
-from user.utils    import SigninConfirm 
-from flight.models import Service, Flight, Airport
+from django.views     import View
+from django.http      import JsonResponse 
+from django.db.models import Q
+from user.models      import User, Country
+from user.utils       import SigninConfirm 
+from flight.models    import Service, Flight, Airport, Airplane, PathType, Calender, Price, CalenderPrice
 
 class ServiceBundleView(View):
     def get(self, request):
@@ -75,3 +74,143 @@ class MainCountryView(View):
                     } for country in countrys]
 
         return JsonResponse({'countrys' : country}, status=200)
+
+
+#구간1
+class Section1View(View):
+    def get(self,request):
+
+        query          = Q()
+        airport_arrive = request.GET.get('airport_arrive')
+        airport_depart = request.GET.get('airport_depart')        
+        arrive_date    = request.GET.get('arrive_date')
+        depart_date    = request.GET.get('depart_date')
+        adult          = request.GET.get('adult')
+        child          = request.GET.get('child')
+
+        if airport_arrive:
+            query &= Q(airport_arrive = airport_arrive)
+
+        if airport_depart:
+            query &= Q(airport_depart = airport_depart)
+
+        if depart_date:
+            query &= Q(depart_date = depart_date)
+
+        if arrive_date:
+            query &= Q(arrive_date = arrive_date)
+
+        if adult:
+            query &= Q(adult = int(adult))
+
+        if child:
+            query &= Q(child = int(child))
+        
+        flights = Flight.objects.select_related(
+            'path_type',
+            'airplane_arrive',
+            'airplane_depart',
+            'airport_depart',
+            'airport_arrive'
+        ).filter(query)
+        
+        airports = Flight.objects.select_related(
+            'path_type',
+            'airplane_arrive',
+            'airplane_depart', 
+            'airport_arrive', 
+            'airport_depart'
+        ).filter(query)
+  
+        section1_data =[{
+
+            'data' :[{
+                'id'                  : flight.id,
+                'path_type'           : flight.path_type.name,
+                'airplane_name'       : flight.airplane_depart.name,
+                'depart_time'         : flight.depart_time.strftime('%H : %M'),
+                'arrive_time'         : flight.arrive_time.strftime('%H : %M'),
+                'depart_english_name' : flight.airport_depart.english_name,
+                'arrive_english_name' : flight.airport_arrive.english_name,
+                'price'               : int(flight.calender_price.price.price)
+                }for flight in flights],
+
+            'airport_korean_depart' : flight.airport_depart.korean_name,
+            'depart_english_name'   : flight.airport_depart.english_name,
+            'airport_korean_arrive' : flight.airport_arrive.korean_name,            
+            'arrive_english_name'   : flight.airport_arrive.english_name,
+            'depart_date'           : flight.depart_date,
+            'arrive_date'           : flight.arrive_date
+            }for flight in airports]
+        
+        return JsonResponse({'section1_data': section1_data}, status=200)
+
+#구간2
+class Section2View(View):
+    def get(self,request):
+
+        query          = Q()
+        airport_arrive = request.GET.get('airport_arrive')
+        airport_depart = request.GET.get('airport_depart')        
+        arrive_date    = request.GET.get('arrive_date')
+        depart_date    = request.GET.get('depart_date')
+        adult          = request.GET.get('adult')
+        child          = request.GET.get('child')
+        
+        if airport_arrive:
+            query &= Q(airport_arrive = airport_arrive)
+
+        if airport_depart:
+            query &= Q(airport_depart = airport_depart)
+
+        if depart_date:
+            query &= Q(depart_date = depart_date)
+
+        if arrive_date:
+            query &= Q(arrive_date = arrive_date)
+
+        if adult:
+            query &= Q(adult = int(adult))
+
+        if child:
+            query &= Q(child = int(child))
+        
+        flights = Flight.objects.select_related(
+            'path_type',
+            'airplane_arrive',
+            'airplane_depart',
+            'airport_depart',
+            'airport_arrive'
+        ).filter(query)
+        
+        airports = Flight.objects.select_related(
+            'path_type',
+            'airplane_arrive',
+            'airplane_depart', 
+            'airport_arrive', 
+            'airport_depart'
+        ).filter(query)
+  
+        section2_data =[{
+  
+            'data' : [{
+                'id'                  : flight.id,
+                'path_type'           : flight.path_type.name,
+                'airplane_name'       : flight.airplane_depart.name,
+                'depart_time'         : flight.depart_time.strftime('%H : %M'),
+                'arrive_time'         : flight.arrive_time.strftime('%H : %M'),
+                'depart_english_name' : flight.airport_depart.english_name,
+                'arrive_english_name' : flight.airport_arrive.english_name,
+                'price'               : int(flight.calender_price.price.price)
+                }for flight in flights],
+
+            'airport_korean_depart' : flight.airport_depart.korean_name,
+            'depart_english_name'   : flight.airport_depart.english_name,
+            'airport_korean_arrive' : flight.airport_arrive.korean_name,            
+            'arrive_english_name'   : flight.airport_arrive.english_name,
+            'depart_date'           : flight.depart_date,
+            'arrive_date'           : flight.arrive_date
+            }for flight in airports]        
+  
+        return JsonResponse({'section2_data': section2_data}, status=200)
+
