@@ -10,6 +10,7 @@ class SignUpTestCase(TestCase):
          self.gender     = Gender.objects.create(name='male')
          self.country    = Country.objects.create(name='대한민국')
          hashed_password = bcrypt.hashpw('123456aA!'.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+         self.client = Client()
 
          User.objects.create(
                  id            = 1,
@@ -29,7 +30,6 @@ class SignUpTestCase(TestCase):
         User.objects.all().delete()
 
     def test_user_post_signup_success(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'kimapple',
@@ -40,7 +40,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json(),
             {
@@ -49,7 +49,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_emailformat_validation(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'kimapple',
@@ -60,7 +59,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -69,7 +68,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_password_validation(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'kimapple',
@@ -80,7 +78,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -89,7 +87,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_email_exists_validation(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'kimapple',
@@ -100,7 +97,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -109,7 +106,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_phone_number_exists_validation(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'kimapple',
@@ -120,7 +116,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -129,7 +125,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_key_error(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'email'         : 'applee24@gmail.com',
@@ -139,7 +134,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'male',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(),
             {
@@ -148,7 +143,6 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signup_gender_does_not_exist_error(self):
-        client = Client()
         user = {
                 'korean_name'   : '김애플',
                 'english_name'  : 'pineapple',
@@ -159,7 +153,7 @@ class SignUpTestCase(TestCase):
                 'gender'        : 'mmal',
                 'country'       : '대한민국'
                 }
-        response = client.post('/user/signup', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signup', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -168,13 +162,12 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signin_success(self):
-        client = Client()
         user = {
                 'email'    : 'applee24@gmail.com',
                 'password' : '123456aA!'
                 }
 
-        response = client.post('/user/signin', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(),
             {
@@ -182,13 +175,12 @@ class SignUpTestCase(TestCase):
             }
         )
     def test_user_post_signin_emailformat_validation(self):
-        client = Client()
         user = {
                 'email'    : 'applee24@gmailcom',
                 'password' : '123456aA!'
                 }
 
-        response = client.post('/user/signin', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -197,33 +189,30 @@ class SignUpTestCase(TestCase):
         )
 
     def test_user_post_signin_user_email_validation(self):
-        client = Client()
         user = {
                 'email'    : 'muntroo@gmail.com',
                 'password' : '122256aA!'
                 }
 
-        response = client.post('/user/signin', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
 
     def test_user_post_signin_user_password_validation(self):
-        client = Client()
         user = {
                 'email'    : 'applee24@gmail.com',
                 'password' : '123444aA!'
                 }
 
-        response = client.post('/user/signin', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
 
     def test_user_post_signin_user_information_validation(self):
-        client = Client()
         user = {
                 'email'    : 'muntrock@gmail.com',
                 'password' : '123444aA!'
                 }
 
-        response = client.post('/user/signin', json.dumps(user), content_type='application/json')
+        response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
         self.assertEqual(response.json(),
             {
@@ -242,9 +231,8 @@ class SignUpTestCase(TestCase):
                         }
 
         mocked_request.get = MagicMock(return_value = FakeResponse())
-        client             = Client()
         header             = {'HTTP_Authorization' : 'access_token'}
-        response           = client.post('/user/signin/kakao', content_type='application/json', **header)
+        response           = self.client.post('/user/signin/kakao', content_type='application/json', **header)
         self.assertEqual(response.status_code, 200)
 
     @patch('user.views.requests')
@@ -258,9 +246,8 @@ class SignUpTestCase(TestCase):
                         }
 
         mocked_request.get = MagicMock(return_value = FakeResponse())
-        client             = Client()
         header             = {'HTTP_Authorization' : 'access_token'}
-        response           = client.post('/user/signin/kakao', content_type='application/json', **header)
+        response           = self.client.post('/user/signin/kakao', content_type='application/json', **header)
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json(),
             {
