@@ -196,6 +196,11 @@ class SignUpTestCase(TestCase):
 
         response = self.client.post('/user/signin', json.dumps(user), content_type='application/json')
         self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.json(), 
+                {
+                    'MESSAGE' : 'DOES_NOT_EXIST_USER'
+                }
+        )
 
     def test_user_post_signin_user_password_validation(self):
         user = {
